@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Trains</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="jumbo" class="jumbotron jumbotron-fluid container">
+        <div id="border">
+            <h1 class="text-center">Sodor Train Schedule</h1>
+        </div>
+    </div>
+
+    <div class="mt-5 container border border-dark">
+        <div class="mb-3 mt-2 border-bottom" id="head-2">Time Table</div>
+        <div id="results">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col-2">Train Name</th>
+                            <th scope="col-2">Destination</th>
+                            <th scope="col-2">Frequency(min)</th>
+                            <th scope="col-2">Next Arrival</th>
+                            <th scope="col-2">Minutes Away</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+        </div>
+    </div>
+
+    <div class="container mt-5 border border-dark">
+        <form>
+            <div class="mb-3 mt-2 border-bottom" id="queries">Add Train</div>
+            <div class="form-group">
+                <label for="train-name">Train Name</label>
+                <input class="form-control" id="train-name">
+            </div>
+            <div class="form-group">
+                <label for="destination">Destination</label>
+                <input class="form-control" id="destination">
+            </div>
+            <div class="form-group">
+                <label>Next Arrival(24 Hour Time)</label>
+                <input class="form-control" type="datetime" id="next-train">
+            </div>
+            <div class="form-group">
+                <label>Frequency(Minutes)</label>
+                <input class="form-control" type="datetime" id="frequency">
+            </div>
+            <div class="text-right mr-2 mt-2">
+            <button type="button" class="mb-3 btn btn-primary">Submit</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+    <script>
+
+        var config = {
+            apiKey: "AIzaSyAwx6Efe8--8WopZsA6dWHup__dgEPv48Y",
+            authDomain: "train-projekt.firebaseapp.com",
+            databaseURL: "https://train-projekt.firebaseio.com",
+            projectId: "train-projekt",
+            storageBucket: "train-projekt.appspot.com",
+            messagingSenderId: "476171411684"
+        };
+        firebase.initializeApp(config);
+
+        var database = firebase.database();
+
+        var name = "";
+        var destination = "";
+        var arrival;
+        var frequency = 0;
+
+        $("button").on("click", function () {
+            console.log("click")
+            name = $("#train-name").val().trim();
+            destination = $("#destination").val().trim();
+            arrival = $("#next-train").val().trim();
+            frequency = $("#frequency").val().trim();
+
+            database.ref().push({
+                name: name,
+                destination: destination,
+                arrival: arrival,
+                frequency: frequency,
+            })
+        })
+
+        database.ref().on("child_added", function (snapshot) {
+
+            var row = $("<tr>");
+
+            var nameData = $("<td>");
+            var tableName = snapshot.val().name;
+            nameData.text(tableName);
+
+            var destinationData = $("<td>");
+            var tableDestination = snapshot.val().destination;
+            destinationData.text(tableDestination);
+
+            var arrivalData = $("<td>");
+            var tableArrival = snapshot.val().arrival;
+            arrivalData.text(tableArrival);
+
+            var frequencyData = $("<td>");
+            var tableFrequency = snapshot.val().frequency;
+            frequencyData.text(tableFrequency);
+            
+            var currentTime = moment()
+            var timeData = $("<td>");
+            var nextTrain = moment(snapshot.val().arrival, "hh:mm")
+            var trainFreq = moment(snapshot.val().frequency, "hh:mm")
+            var m1 = nextTrain.diff(currentTime, "minutes")
+            if(m1 < 0){
+                m1 = m1 + 1440
+            }
+            timeData.text(m1);
+            console.log(currentTime.format("hh:mm"))
+
+            row.append(nameData, destinationData, frequencyData, arrivalData, timeData);
+
+            $("#table-body").append(row);
+            console.log(nextTrain, currentTime)
+        }, function (errorObject) {
+            console.log("The read failed: " + errorObject.code);
+        });
+
+        
+
+    </script>
+
+</body>
+
+</html>
